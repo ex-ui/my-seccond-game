@@ -1,1 +1,144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Clicker + Leaderboard</title>
+  <style>
+    body {
+      text-align: center;
+      font-family: sans-serif;
+      background: #111;
+      color: white;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    #score {
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    #leaderboard {
+      margin-top: 30px;
+    }
+    #leaderboard table {
+      width: 50%;
+      margin: 0 auto;
+      border-collapse: collapse;
+    }
+    #leaderboard th, #leaderboard td {
+      padding: 10px;
+      text-align: center;
+      border: 1px solid white;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 18px;
+      background-color: green;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 8px;
+    }
+    button:hover {
+      background-color: darkgreen;
+    }
+  </style>
+</head>
+<body>
 
+<h1>Game Klik-Klik!</h1>
+<div id="score">Skor: 0</div>
+<button onclick="incrementScore()">Klik!</button>
+
+<h2>Leaderboard</h2>
+<div id="leaderboard">
+  <table>
+    <thead>
+      <tr>
+        <th>Nama</th>
+        <th>Skor</th>
+      </tr>
+    </thead>
+    <tbody id="leaderboardList"></tbody>
+  </table>
+</div>
+
+<script>
+  let score = 0;
+  const scoreText = document.getElementById("score");
+  const leaderboardList = document.getElementById("leaderboardList");
+
+  // URL Web App Google Apps Script kamu
+  const apiUrl = "https://script.google.com/macros/s/AKfycbyxxxxx/exec"; // Ganti dengan URL kamu
+
+  function incrementScore() {
+    score++;
+    scoreText.textContent = "Skor: " + score;
+  }
+
+  // Kirim nama dan skor ke Google Sheets (Leaderboard)
+  function submitScore(name) {
+    const data = {
+      nama: name,
+      skor: score
+    };
+
+    // Kirim data ke backend (Google Sheets)
+    fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    }).then(response => {
+      if (response.ok) {
+        console.log('Skor berhasil dikirim!');
+        getLeaderboard();
+      } else {
+        console.log('Gagal mengirim skor');
+      }
+    });
+  }
+
+  // Ambil leaderboard (skor tertinggi) dari Google Sheets
+  function getLeaderboard() {
+    fetch(apiUrl + "?action=getLeaderboard")
+      .then(response => response.json())
+      .then(data => {
+        leaderboardList.innerHTML = ""; // Reset leaderboard
+        data.forEach(entry => {
+          const row = document.createElement("tr");
+          const nameCell = document.createElement("td");
+          const scoreCell = document.createElement("td");
+
+          nameCell.textContent = entry[0];
+          scoreCell.textContent = entry[1];
+
+          row.appendChild(nameCell);
+          row.appendChild(scoreCell);
+          leaderboardList.appendChild(row);
+        });
+      });
+  }
+
+  // Panggil leaderboard setiap kali game dimulai atau setelah submit
+  getLeaderboard();
+
+  // Prompt untuk nama setelah game selesai
+  function gameOver() {
+    const name = prompt("Masukkan nama kamu untuk leaderboard:", "Nama Pemain");
+    if (name) {
+      submitScore(name);
+    }
+  }
+
+  // Misalnya kalau game selesai atau pemain memilih untuk selesai
+  setTimeout(() => {
+    gameOver();
+  }, 30000); // Game berakhir setelah 30 detik (bisa diubah sesuai kebutuhan)
+</script>
+
+</body>
+</html>
